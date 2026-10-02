@@ -2,8 +2,13 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DEFAULT_VAULT_NAME } from '@/config/workshop';
 import { cn } from '@/lib/utils';
+import { Babcia } from './Babcia';
+import { ClosingBand } from './ClosingBand';
 import { DepositCard } from './DepositCard';
+import { DistillerySteps } from './DistillerySteps';
 import { useVaults } from './helpers';
+import { ShotCalculator } from './ShotCalculator';
+import { ToastTicker } from './ToastTicker';
 import { VaultCard } from './VaultCard';
 import { WithdrawCard } from './WithdrawCard';
 
@@ -31,9 +36,11 @@ export function LeverageYieldPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-12">
+      <Babcia />
+      <ToastTicker />
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
-        <section aria-labelledby="vaults-heading" className="flex flex-col gap-4">
+        <section aria-labelledby="vaults-heading" className="relative z-10 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <span className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
               <span aria-hidden className="size-1.5 rounded-full bg-primary" />
@@ -51,9 +58,21 @@ export function LeverageYieldPage() {
               share token.
             </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="vault-grid grid gap-4 sm:grid-cols-2">
+            <style>{`
+              @media (prefers-reduced-motion: no-preference) and (min-width: 640px) {
+                .vault-cell { transition: translate 0.5s cubic-bezier(0.34, 1.4, 0.64, 1), rotate 0.5s ease-out; }
+                .vault-cell:nth-child(even) { --dir: -1; }
+                .vault-grid:has(.vault-cell:nth-child(odd):hover) .vault-cell:nth-child(even) { translate: 16px 0; rotate: 2deg; }
+                .vault-grid:has(.vault-cell:nth-child(even):hover) .vault-cell:nth-child(odd) { translate: -16px 0; rotate: -2deg; }
+              }
+            `}</style>
             {vaults.map((vault, index) => (
-              <div key={vault.name} className="animate-rise-in" style={{ animationDelay: `${index * 90}ms` }}>
+              <div
+                key={vault.name}
+                className="vault-cell animate-rise-in"
+                style={{ animationDelay: `${index * 90}ms` }}
+              >
                 <VaultCard
                   vault={vault}
                   selected={vault.name === vaultName}
@@ -102,6 +121,9 @@ export function LeverageYieldPage() {
           </CardContent>
         </Card>
       </div>
+      <DistillerySteps />
+      <ShotCalculator />
+      <ClosingBand />
     </div>
   );
 }
