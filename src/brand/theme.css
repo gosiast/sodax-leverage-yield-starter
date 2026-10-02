@@ -39,6 +39,7 @@
   --hero-foreground: #ffffff;
   --hero-muted: #ffe4e9;
   --hero-accent: #ffd75e;
+  --hero-dark: #1c0b0f; /* hero field behind the waving flag band */
 
   /* Status */
   --destructive: #8b0f22; /* deep maroon, so errors don't read as the brand red */
@@ -88,6 +89,14 @@ body {
     140% 140%,
     auto,
     auto;
+}
+
+/* Dark hero: deep wine with a red glow, under the white-over-red waves. */
+.bg-hero-dark {
+  background-color: var(--hero-dark);
+  background-image:
+    radial-gradient(ellipse at 85% 10%, color-mix(in srgb, var(--primary) 35%, transparent), transparent 55%),
+    radial-gradient(ellipse at 10% 100%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 50%);
 }
 
 @media (prefers-reduced-motion: no-preference) {

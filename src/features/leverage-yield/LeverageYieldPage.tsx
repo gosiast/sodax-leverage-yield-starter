@@ -34,13 +34,21 @@ export function LeverageYieldPage() {
     <div className="flex flex-col gap-6">
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
         <section aria-labelledby="vaults-heading" className="flex flex-col gap-4">
-          <div>
-            <h2 id="vaults-heading" className="text-xl font-bold">
+          <div className="flex flex-col gap-2">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wider text-secondary-foreground">
+              <span aria-hidden className="size-1.5 rounded-full bg-primary" />
+              Leverage Yield
+            </span>
+            <h2 id="vaults-heading" className="font-display text-4xl leading-tight">
               Vaults
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="max-w-xl text-sm text-muted-foreground">
               Pooled vaults that loop a liquid staking token to multiply its yield, and its risk. Your position is the
-              vault's <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">lsoda*</code> share token.
+              vault's{' '}
+              <code className="rounded bg-secondary px-1.5 py-0.5 font-mono text-xs text-secondary-foreground">
+                lsoda*
+              </code>{' '}
+              share token.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

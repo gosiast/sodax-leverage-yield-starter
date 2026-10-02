@@ -25,13 +25,34 @@ type Props = {
   onWithdraw: () => void;
 };
 
-function Stat({ label, value, loading, tone }: { label: string; value: string; loading: boolean; tone?: 'negative' }) {
+function Stat({ label, value, loading }: { label: string; value: string; loading: boolean }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-muted/50 px-3 py-2">
+    <div className="flex flex-col gap-0.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className={cn('text-sm font-semibold tabular-nums', tone === 'negative' && 'text-destructive')}>
-        {loading ? <Skeleton className="h-5 w-16" /> : value}
-      </dd>
+      <dd className="text-sm font-semibold tabular-nums">{loading ? <Skeleton className="h-5 w-16" /> : value}</dd>
+    </div>
+  );
+}
+
+/** Health factor as a bar: empty at 1.00 (liquidation), full at 1.60 or more. */
+function HealthGauge({ factor, label, loading }: { factor?: bigint; label: string; loading: boolean }) {
+  const ratio = factor === undefined ? 0 : Math.min(Math.max((Number(factor) / 1e18 - 1) / 0.6, 0.04), 1);
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex items-baseline justify-between">
+        <dt className="text-xs text-muted-foreground">Health factor</dt>
+        <dd className="text-sm font-semibold tabular-nums">{loading ? <Skeleton className="h-5 w-12" /> : label}</dd>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="presentation">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-destructive via-primary to-accent transition-all duration-700"
+          style={{ width: `${ratio * 100}%` }}
+        />
+      </div>
+      <div className="flex justify-between text-[10px] uppercase tracking-wide text-subtle-foreground">
+        <span>Liquidation 1.00</span>
+        <span>Safer</span>
+      </div>
     </div>
   );
 }
@@ -67,15 +88,19 @@ export function VaultCard({ vault, selected, onDeposit, onWithdraw }: Props) {
   return (
     <Card
       className={cn(
-        'overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md',
+        'group overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
         selected && 'ring-2 ring-primary',
       )}
     >
-      <CardHeader className="gap-4">
-        <div className="flex items-center gap-3">
+      <CardHeader className="relative gap-5 bg-gradient-to-br from-secondary via-secondary/40 to-card pb-5">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-8 -top-8 size-32 rounded-full bg-primary/10 blur-2xl transition-opacity group-hover:opacity-100"
+        />
+        <div className="relative flex items-center gap-3">
           <span
             aria-hidden
-            className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground"
+            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary font-display text-base text-primary-foreground shadow-md ring-4 ring-card"
           >
             {label.slice(0, 2)}
           </span>
@@ -83,16 +108,17 @@ export function VaultCard({ vault, selected, onDeposit, onWithdraw }: Props) {
             <CardTitle className="truncate">{vault.name}</CardTitle>
             <span className="text-sm text-muted-foreground">Leveraged {label}</span>
           </div>
+          {selected && <Badge className="ml-auto bg-primary text-primary-foreground">Selected</Badge>}
         </div>
-        <div className="flex items-end justify-between gap-3">
-          <div className="flex flex-col">
-            <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Net APR</span>
+        <div className="relative flex items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net APR</span>
             {apr.isLoading ? (
-              <Skeleton className="mt-1 h-9 w-28" />
+              <Skeleton className="h-11 w-32" />
             ) : (
               <span
                 className={cn(
-                  'font-display text-4xl leading-none tabular-nums',
+                  'font-display text-5xl leading-none tabular-nums',
                   negative ? 'text-destructive' : 'text-success',
                 )}
               >
@@ -100,30 +126,40 @@ export function VaultCard({ vault, selected, onDeposit, onWithdraw }: Props) {
               </span>
             )}
           </div>
-          {leverage && <Badge variant="muted">{leverage}× exposure</Badge>}
+          {leverage && (
+            <span className="rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground shadow-sm">
+              {leverage}× exposure
+            </span>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <dl className="grid grid-cols-2 gap-2">
-          <Stat
-            label="TVL"
-            value={`${formatTokenAmount(tvl.data, SHARE_DECIMALS, 2)} ${label}`}
-            loading={tvl.isLoading}
-          />
-          <Stat
-            label="Share price"
-            value={`${formatTokenAmount(sharePrice.data, SHARE_DECIMALS, 4)} ${label}`}
-            loading={sharePrice.isLoading}
-          />
-          <Stat label="Target LTV" value={apr.data ? formatBps(apr.data.targetLtvBps) : '–'} loading={apr.isLoading} />
-          <Stat label="Health factor" value={health ?? '–'} loading={position.isLoading} />
+      <CardContent className="flex flex-col gap-4 pt-5">
+        <dl className="flex flex-col gap-4">
+          <div className="grid grid-cols-3 gap-3">
+            <Stat
+              label="TVL"
+              value={`${formatTokenAmount(tvl.data, SHARE_DECIMALS, 2)} ${label}`}
+              loading={tvl.isLoading}
+            />
+            <Stat
+              label="Share price"
+              value={`${formatTokenAmount(sharePrice.data, SHARE_DECIMALS, 4)} ${label}`}
+              loading={sharePrice.isLoading}
+            />
+            <Stat
+              label="Target LTV"
+              value={apr.data ? formatBps(apr.data.targetLtvBps) : '–'}
+              loading={apr.isLoading}
+            />
+          </div>
+          <HealthGauge factor={position.data?.healthFactor} label={health ?? '–'} loading={position.isLoading} />
         </dl>
         {negative && (
           <p className="text-xs text-destructive">
             The borrow rate is above the yield right now, so the net APR is negative.
           </p>
         )}
-        <div className="flex items-center justify-between rounded-lg border border-dashed px-3 py-2 text-sm">
+        <div className="flex items-center justify-between rounded-full bg-muted px-4 py-2 text-sm">
           <span className="text-muted-foreground">Your shares</span>
           <span className="font-semibold tabular-nums">
             {!address
