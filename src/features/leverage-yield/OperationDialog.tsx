@@ -5,6 +5,7 @@ import { Callout } from '@/components/ui/callout';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { chainName, explorerTxUrl } from '@/lib/chains';
 import { cn } from '@/lib/utils';
+import { CheersBottle } from './CheersBottle';
 import type { FlowStage, VaultFlow } from './useVaultFlow';
 
 export type SummaryRow = { label: string; value: ReactNode; emphasis?: boolean };
@@ -173,6 +174,13 @@ export function OperationDialog({
                 link={{ href: dstExplorer, text: 'View on Sonic' }}
               />
             </ol>
+            {state.stage === 'done' && (
+              <div className="flex flex-col items-center gap-2 rounded-xl bg-success-muted p-4 text-center text-success">
+                <CheersBottle />
+                <p className="font-display text-2xl">Cheers! 🥂</p>
+                <p className="text-sm font-semibold">{deliveredLabel}</p>
+              </div>
+            )}
             {state.error && <Callout variant="destructive">{state.error}</Callout>}
             {flow.statusError && state.stage === 'filling' && (
               <p className="text-xs text-muted-foreground">Status check is retrying: {flow.statusError}</p>

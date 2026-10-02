@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { formatUnits } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DEFAULT_SLIPPAGE_BPS,
@@ -17,12 +16,13 @@ import { chainName } from '@/lib/chains';
 import { formatBps, formatTokenAmount, minAmountAfterSlippage, parseTokenAmount } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { useEvmWallet } from '@/wallet';
+import { AmountField } from './AmountField';
 import { Field } from './Field';
 import { errorMessage, SHARE_DECIMALS, underlyingLabel, useDebounced, useVaults } from './helpers';
 import { defaultTokenFor, NetworkTokenFields } from './NetworkTokenFields';
 import { OperationDialog } from './OperationDialog';
+import { QuoteSummary } from './QuoteSummary';
 import { RiskNotice } from './RiskNotice';
-import { SlippagePicker } from './SlippagePicker';
 import { useVaultFlow } from './useVaultFlow';
 
 type Props = { vaultName: string; onVaultChange: (name: string) => void };
@@ -190,33 +190,25 @@ export function WithdrawCard({ vaultName, onVaultChange }: Props) {
         )}
       </div>
 
-      <Field label="Shares to withdraw" htmlFor="withdraw-amount">
-        <div className="relative">
-          <Input
-            id="withdraw-amount"
-            inputMode="decimal"
-            placeholder="0.0"
-            value={amount}
-            disabled={!holding}
-            onChange={e => setAmount(e.target.value)}
-            aria-invalid={overBalance}
-            className="pr-24"
-          />
+      <AmountField
+        label="Shares to withdraw"
+        id="withdraw-amount"
+        value={amount}
+        onChange={setAmount}
+        symbol={vault?.name ?? ''}
+        disabled={!holding}
+        error={overBalance ? "That's more than the shares you hold on this network." : undefined}
+        trailing={
           <button
             type="button"
             disabled={!holding}
             onClick={() => setAmount(formatUnits(shares, SHARE_DECIMALS))}
-            className="absolute inset-y-0 right-3 text-sm font-semibold text-primary hover:underline disabled:opacity-50"
+            className="text-sm font-semibold text-primary hover:underline disabled:opacity-50"
           >
             Max
           </button>
-        </div>
-        {overBalance && (
-          <span className="text-xs font-normal text-destructive">
-            That's more than the shares you hold on this network.
-          </span>
-        )}
-      </Field>
+        }
+      />
 
       <NetworkTokenFields
         chainKey={toChain}
@@ -229,17 +221,13 @@ export function WithdrawCard({ vaultName, onVaultChange }: Props) {
         }}
       />
 
-      <div className="grid gap-2 rounded-md bg-muted p-4 text-sm" aria-live="polite">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-muted-foreground">You receive</span>
-          <span className="text-right font-semibold">{quoting ? 'Getting quote…' : receiveText}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-muted-foreground">Minimum you'll accept</span>
-          <span className="text-right">{quoting ? '–' : minText}</span>
-        </div>
-        <SlippagePicker value={slippageBps} onChange={setSlippageBps} />
-      </div>
+      <QuoteSummary
+        receiveText={receiveText}
+        minText={minText}
+        loading={quoting}
+        slippageBps={slippageBps}
+        onSlippageChange={setSlippageBps}
+      />
 
       {quoteError && !quoting && (
         <Callout variant="destructive">

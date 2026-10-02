@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { NextPrompt } from '@/components/workshop/NextPrompt';
 import { DEFAULT_VAULT_NAME } from '@/config/workshop';
 import { cn } from '@/lib/utils';
 import { DepositCard } from './DepositCard';
@@ -16,7 +15,7 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 /**
- * SODAX Leverage Yield: browse the vaults, deposit from any supported network and token, see your shares and
+ * Leverage Yield: browse the vaults, deposit from any supported network and token, see your shares and
  * withdraw. A vault card's buttons select that vault in the form beside it.
  */
 export function LeverageYieldPage() {
@@ -33,8 +32,6 @@ export function LeverageYieldPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <NextPrompt next="done" />
-
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_26rem]">
         <section aria-labelledby="vaults-heading" className="flex flex-col gap-4">
           <div>
@@ -47,14 +44,15 @@ export function LeverageYieldPage() {
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {vaults.map(vault => (
-              <VaultCard
-                key={vault.name}
-                vault={vault}
-                selected={vault.name === vaultName}
-                onDeposit={() => select(vault.name, 'deposit')}
-                onWithdraw={() => select(vault.name, 'withdraw')}
-              />
+            {vaults.map((vault, index) => (
+              <div key={vault.name} className="animate-rise-in" style={{ animationDelay: `${index * 90}ms` }}>
+                <VaultCard
+                  vault={vault}
+                  selected={vault.name === vaultName}
+                  onDeposit={() => select(vault.name, 'deposit')}
+                  onWithdraw={() => select(vault.name, 'withdraw')}
+                />
+              </div>
             ))}
           </div>
         </section>
@@ -67,7 +65,7 @@ export function LeverageYieldPage() {
                 ? 'Pay with a token on a supported network and receive vault shares.'
                 : 'Sell your vault shares back into a token on a network you choose.'}
             </CardDescription>
-            <fieldset className="mt-2 flex w-fit gap-1 rounded-full border bg-muted p-1">
+            <fieldset className="mt-2 grid grid-cols-2 gap-1 rounded-full border bg-muted p-1">
               <legend className="sr-only">Action</legend>
               {TABS.map(option => (
                 <button
@@ -76,9 +74,9 @@ export function LeverageYieldPage() {
                   aria-pressed={tab === option.value}
                   onClick={() => setTab(option.value)}
                   className={cn(
-                    'rounded-full px-4 py-1 text-sm font-medium transition-colors',
+                    'rounded-full px-4 py-2 text-sm font-semibold transition-all',
                     tab === option.value
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-card text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
                 >

@@ -3,18 +3,18 @@ import { ChainKeys, type XToken } from '@sodax/types';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Callout } from '@/components/ui/callout';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DEFAULT_SLIPPAGE_BPS, DEFAULT_SOURCE_CHAIN, REFETCH_MS, type SourceChainKey } from '@/config/workshop';
 import { chainName } from '@/lib/chains';
 import { formatBps, formatTokenAmount, minAmountAfterSlippage, parseTokenAmount } from '@/lib/format';
 import { useEvmWallet } from '@/wallet';
+import { AmountField } from './AmountField';
 import { Field } from './Field';
 import { errorMessage, SHARE_DECIMALS, underlyingLabel, useDebounced, useVaults } from './helpers';
 import { defaultTokenFor, NetworkTokenFields } from './NetworkTokenFields';
 import { OperationDialog } from './OperationDialog';
+import { QuoteSummary } from './QuoteSummary';
 import { RiskNotice } from './RiskNotice';
-import { SlippagePicker } from './SlippagePicker';
 import { useVaultFlow } from './useVaultFlow';
 
 type Props = { vaultName: string; onVaultChange: (name: string) => void };
@@ -129,39 +129,22 @@ export function DepositCard({ vaultName, onVaultChange }: Props) {
         }}
       />
 
-      <Field label="Amount" htmlFor="deposit-amount">
-        <div className="relative">
-          <Input
-            id="deposit-amount"
-            inputMode="decimal"
-            placeholder="0.0"
-            value={amount}
-            onChange={e => setAmount(e.target.value)}
-            aria-invalid={!!invalidAmount}
-            className="pr-20"
-          />
-          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-            {symbol}
-          </span>
-        </div>
-        {invalidAmount && (
-          <span className="text-xs font-normal text-destructive">
-            Enter a number with at most {token?.decimals} decimals.
-          </span>
-        )}
-      </Field>
+      <AmountField
+        label="Amount"
+        id="deposit-amount"
+        value={amount}
+        onChange={setAmount}
+        symbol={symbol}
+        error={invalidAmount ? `Enter a number with at most ${token?.decimals} decimals.` : undefined}
+      />
 
-      <div className="grid gap-2 rounded-md bg-muted p-4 text-sm" aria-live="polite">
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-muted-foreground">You receive</span>
-          <span className="text-right font-semibold">{quoting ? 'Getting quote…' : receiveText}</span>
-        </div>
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-muted-foreground">Minimum you'll accept</span>
-          <span className="text-right">{quoting ? '–' : minText}</span>
-        </div>
-        <SlippagePicker value={slippageBps} onChange={setSlippageBps} />
-      </div>
+      <QuoteSummary
+        receiveText={receiveText}
+        minText={minText}
+        loading={quoting}
+        slippageBps={slippageBps}
+        onSlippageChange={setSlippageBps}
+      />
 
       {quoteError && !quoting && (
         <Callout variant="destructive">
@@ -195,7 +178,7 @@ export function DepositCard({ vaultName, onVaultChange }: Props) {
           },
           { label: 'You receive', value: receiveText, emphasis: true },
           { label: `Minimum (${formatBps(slippageBps)} slippage)`, value: minText },
-          { label: 'Shares are held in', value: 'Your SODAX hub wallet on Sonic' },
+          { label: 'Shares are held in', value: 'Your hub wallet on Sonic' },
         ]}
         warnings={<RiskNotice />}
       />
